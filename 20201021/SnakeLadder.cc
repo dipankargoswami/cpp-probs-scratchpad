@@ -1,29 +1,41 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
 class Player{
 public:
-    Player() : score_(0) {
+    Player(string name) : score_(0), name_(name) {
     }
 
     int getScore() {
         return score_;
     }
 
+    string getName() {
+        return name_;
+    }
+
     void setScore(int score) {
         score_ = score;
     }
+
+    bool operator < (const Player& p1) const
+    {
+        return (score_ < p1.score_);
+    }
+
 private:
     int score_;
     string name_;
 };
 
+
 class PlayerList {
 public:
-    PlayerList(int num_players) : players_(num_players, Player()) {
+    PlayerList(std::vector<Player>& players) : players_(players) {
     }
 
     int getPlayerScore(int index) {
@@ -34,24 +46,21 @@ public:
         players_[index].setScore(score);
     }
 
-    int getHighestRatedPlayerIndex() {
-        int max_score = 0;
-        int winning_index = -1;
-
-        for (size_t i = 0; i < players_.size(); i++)
-         {
-             Player player = players_[i];
-            if (player.getScore() > max_score) {
-                max_score = player.getScore();
-                winning_index = i;
-            }
-        }
-        return winning_index;
+    string getHighestRatedPlayer() {
+        Player p = *max_element(players_.begin(), players_.end());
+        return p.getName();
     }
+
+    string getPlayerName(int index) {
+        return players_[index].getName();
+    }
+
+    int playerCount() {
+        return players_.size();
+    }
+
 private:
-    std::vector<Player> players_;
-    //int highest_score;
-    //int highest_score_index;
+    std::vector<Player>& players_;
 };
 
 class LudoBoard {
@@ -115,46 +124,59 @@ private:
 int main() {
     LudoBoard board(1, 20, {{10, 5}, {15, 2}}, {{11, 15}});
 
+    //Lets do some unit testing for the board
     assert(board.getDestNumber(7,3) == 5);
     assert(board.getDestNumber(7,4) == 15);
     assert(board.getDestNumber(7,5) == 12);
     assert(board.getDestNumber(17,5) == 17);
     assert(board.getDestNumber(17,3) == 20);
 
-    PlayerList plist(3);
-    assert(plist.getPlayerScore(0) == 0);
-    plist.setPlayerScore(1, 20);
-    assert(plist.getPlayerScore(1) == 20);
-    assert(plist.getPlayerScore(2) == 0);
-    plist.setPlayerScore(1, 0);
+    int playerCount;
+    cout << "Enter number of players: " ;
+    cin >> playerCount;
 
+    std::vector<Player> players;
+    for(int pi = 0; pi < playerCount; pi++) {
+        string playerName;
+        cout << "Enter Player name: ";
+        cin >> playerName;
+        players.push_back(Player(playerName));
+    }
+    PlayerList plist(players);
+
+    //Some more unit testing, this time for the Player Manager
+    std::vector<Player> pTest({Player("P1"), Player("P2"), Player("P3")});
+    PlayerList plisttest(pTest);
+    assert(plisttest.getPlayerScore(0) == 0);
+    plisttest.setPlayerScore(1, 20);
+    assert(plisttest.getPlayerScore(1) == 20);
+    assert(plisttest.getPlayerScore(2) == 0);
 
     Dice dice(1, 6);
 
+    //Just checking randomness of the dice
     for(int i = 0; i < 100; i++) {
         int r = dice.getNextRoll();
         assert(r >= 1 && r <= 6);
     }
 
-    int max_score = 0;
+    //Here goes the actual code
+    for(int i = 0; i < 20; i++) {
+        int player_index = i % plist.playerCount();
 
-    for(int i = 0; i < 50; i++) {
-        int player_index = i % 3/*Number of players*/;
-        
         int roll = dice.getNextRoll();/*What is the next number*/
         int start_pos = plist.getPlayerScore(player_index);
         int dest = board.getDestNumber(start_pos, roll);
 
         if(dest == board.getEndpoint()) {
-            cout << "Hello Player " << (player_index+1) << ", Congratulations !!!! You have won with the new roll " << roll << endl;
+            cout << "Hello Player " << plist.getPlayerName(player_index) << ", Congratulations !!!! You have won with the new roll " << roll << endl;
             return EXIT_SUCCESS;
         }
         else {
-            cout << "Hello Player " << (player_index+1) << ", your roll is " << roll << " and new score is " << dest << endl;
+            cout << "Hello Player " << plist.getPlayerName(player_index) << ", your roll is " << roll << " and new score is " << dest << endl;
             plist.setPlayerScore(player_index, dest);
         }
     }
 
-    cout << "Hello Player " << plist.getHighestRatedPlayerIndex() + 1 << ", Congratulations !!!! You have won." << endl;
-
+    cout << "Hello Player " << plist.getHighestRatedPlayer() << ", Congratulations !!!! You have won by being at the highest position." << endl;
 }
