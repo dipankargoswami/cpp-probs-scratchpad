@@ -4,9 +4,9 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/Cellar/boost/1.73.0/include/",
-                "/usr/local/Cellar/openssl@1.1/1.1.1g/include/",
-                "/usr/local/Cellar/jsoncpp/1.9.3/include/"
+                "/usr/local/Cellar/boost/1.78.0_1/include/",
+                "/usr/local/Cellar/openssl@1.1/1.1.1o/include/",
+                "/usr/local/Cellar/jsoncpp/1.9.5/include/"
             ],
             "defines": [],
             "macFrameworkPath": [
